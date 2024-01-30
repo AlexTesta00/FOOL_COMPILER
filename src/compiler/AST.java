@@ -171,4 +171,104 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
+	
+	/*----------------------------------------------OPERATOR EXTENSION------------------------------------------------*/
+	/*LE Node*/
+	public static class LessEqualNode extends Node{
+		final Node left;
+		final Node right;
+
+		LessEqualNode(final Node left, final Node right){
+			this.left = left;
+			this.right = right;
+		}
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	/*GE Node*/
+	public static class GreaterEqualNode extends Node{
+		final Node left;
+		final Node right;
+
+		GreaterEqualNode(final Node left, final Node right){
+			this.left = left;
+			this.right = right;
+		}
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	/*OR Node*/
+	public static class OrNode extends Node{
+		final Node left;
+		final Node right;
+
+		OrNode(final Node left, final Node right){
+			this.left = left;
+			this.right = right;
+		}
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+	/*AND Node*/
+	public static class AndNode extends Node{
+		final Node left;
+		final Node right;
+
+		AndNode(final Node left, final Node right){
+			this.left = left;
+			this.right = right;
+		}
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+	/*DIV Node*/
+	public static class DivNode extends Node{
+		final Node left;
+		final Node right;
+
+		DivNode(final Node left, final Node right){
+			this.left = left;
+			this.right = right;
+		}
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+	/*MINUS Node*/
+	public static class MinusNode extends Node{
+		final Node left;
+		final Node right;
+
+		MinusNode(final Node left, final Node right){
+			this.left = left;
+			this.right = right;
+		}
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+	/*NOT Node*/
+	public static class NotNode extends Node{
+		final Node exp;
+
+		NotNode(final Node exp){
+			this.exp = exp;
+		}
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
 }
