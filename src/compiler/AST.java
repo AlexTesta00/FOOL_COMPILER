@@ -171,7 +171,7 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
-	
+
 	/*----------------------------------------------OPERATOR EXTENSION------------------------------------------------*/
 	/*LE Node*/
 	public static class LessEqualNode extends Node{
