@@ -177,4 +177,121 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		if (print) printNode(n,n.val.toString());
 		return "push "+n.val;
 	}
+
+	/*----------------------------------------------OPERATOR EXTENSION------------------------------------------------*/
+
+	@Override
+	public String visitNode(LessEqualNode n) throws VoidException {
+		if (print) printNode(n);
+		String firstLabel = freshLabel();
+		String secondLabel = freshLabel();
+		return nlJoin(
+				visit(n.left),
+				visit(n.right),
+				"bleq " + firstLabel,
+				"push 0",
+				"b " + secondLabel,
+				firstLabel + ":",
+				"push 1",
+				secondLabel + ":"
+
+		);
+	}
+
+	@Override
+	public String visitNode(GreaterEqualNode n) throws VoidException {
+		if (print) printNode(n);
+		String firstLabel = freshLabel();
+		String secondLabel = freshLabel();
+		return nlJoin(
+				visit(n.left),
+				visit(n.right),
+				"push 1",
+				"sub",
+				"bleq " + firstLabel,
+				"push 1",
+				"b " + secondLabel,
+				firstLabel + ":",
+				"push 0",
+				secondLabel + ":"
+		);
+	}
+
+	@Override
+	public String visitNode(OrNode n) throws VoidException {
+		if (print) printNode(n);
+		String firstLabel = freshLabel();
+		String secondLabel = freshLabel();
+		return nlJoin(
+				visit(n.left),
+				"push 1",
+				"beq " + firstLabel,
+				visit(n.right),
+				"push 1",
+				"beq " + firstLabel,
+				"push 0",
+				"b " + secondLabel,
+				firstLabel + ":",
+				"push 1",
+				secondLabel + ":"
+		);
+	}
+
+	@Override
+	public String visitNode(AndNode n) throws VoidException {
+		if (print) printNode(n);
+		String firstLabel = freshLabel();
+		String secondLabel = freshLabel();
+		return nlJoin(
+				visit(n.left),
+				"push 0",
+				"beq " + firstLabel,
+				visit(n.right),
+				"push 0",
+				"beq " + firstLabel,
+				"push 1",
+				"b " + secondLabel,
+				firstLabel + ":",
+				"push 0",
+				secondLabel + ":"
+		);
+	}
+
+	@Override
+	public String visitNode(DivNode n) throws VoidException {
+		if (print) printNode(n);
+		return nlJoin(
+				visit(n.left),
+				visit(n.right),
+				"div"
+		);
+	}
+
+	@Override
+	public String visitNode(MinusNode n) throws VoidException {
+		if (print) printNode(n);
+		return nlJoin(
+				visit(n.left),
+				visit(n.right),
+				"sub"
+		);
+	}
+
+	@Override
+	public String visitNode(NotNode n) throws VoidException {
+		if (print) printNode(n);
+		final String firstLabel = freshLabel();
+		final String secondLabel = freshLabel();
+		return nlJoin(
+				visit(n.exp),
+				"push 0",
+				"beq " + firstLabel,
+				"push 0",
+				"b " + secondLabel,
+				firstLabel + ":",
+				"push 1",
+				secondLabel + ":"
+		);
+	}
+
 }
