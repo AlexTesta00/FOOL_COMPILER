@@ -50,7 +50,9 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		STentry entry = new STentry(nestingLevel, new ArrowTypeNode(parTypes,n.retType),decOffset--);
 		//inserimento di ID nella symtable
 		if (hm.put(n.id, entry) != null) {
-			System.out.println("Fun id " + n.id + " at line "+ n.getLine() +" already declared");
+			//System.out.println("Fun id " + n.id + " at line "+ n.getLine() +" already declared");
+			ErrorManager.printError(ErrorManager.ERROR_CODE,
+								"Fun id " + n.id + " at line "+ n.getLine() +" already declared");
 			stErrors++;
 		} 
 		//creare una nuova hashmap per la symTable
@@ -63,7 +65,9 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		int parOffset=1;
 		for (ParNode par : n.parlist)
 			if (hmn.put(par.id, new STentry(nestingLevel,par.getType(),parOffset++)) != null) {
-				System.out.println("Par id " + par.id + " at line "+ n.getLine() +" already declared");
+				//System.out.println("Par id " + par.id + " at line "+ n.getLine() +" already declared");
+				ErrorManager.printError(ErrorManager.ERROR_CODE,
+						"Par id " + par.id + " at line "+ n.getLine() +" already declared");
 				stErrors++;
 			}
 		for (Node dec : n.declist) visit(dec);
@@ -82,7 +86,9 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		STentry entry = new STentry(nestingLevel,n.getType(),decOffset--);
 		//inserimento di ID nella symtable
 		if (hm.put(n.id, entry) != null) {
-			System.out.println("Var id " + n.id + " at line "+ n.getLine() +" already declared");
+			//System.out.println("Var id " + n.id + " at line "+ n.getLine() +" already declared");
+			ErrorManager.printError(ErrorManager.ERROR_CODE,
+					"Var id " + n.id + " at line "+ n.getLine() +" already declared");
 			stErrors++;
 		}
 		return null;
@@ -133,7 +139,9 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		if (print) printNode(n);
 		STentry entry = stLookup(n.id);
 		if (entry == null) {
-			System.out.println("Fun id " + n.id + " at line "+ n.getLine() + " not declared");
+			//System.out.println("Fun id " + n.id + " at line "+ n.getLine() + " not declared");
+			ErrorManager.printError(ErrorManager.ERROR_CODE,
+					"Fun id " + n.id + " at line "+ n.getLine() + " not declared");
 			stErrors++;
 		} else {
 			n.entry = entry;
@@ -148,7 +156,9 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		if (print) printNode(n);
 		STentry entry = stLookup(n.id);
 		if (entry == null) {
-			System.out.println("Var or Par id " + n.id + " at line "+ n.getLine() + " not declared");
+			//System.out.println("Var or Par id " + n.id + " at line "+ n.getLine() + " not declared");
+			ErrorManager.printError(ErrorManager.ERROR_CODE,
+					"Var or Par id " + n.id + " at line "+ n.getLine() + " not declared");
 			stErrors++;
 		} else {
 			n.entry = entry;
@@ -223,5 +233,23 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		if (print) printNode(n);
 		visit(n.exp);
 		return null;
+	}
+
+
+
+
+	/*----------------------------------------------ERROR MANAGER------------------------------------------------*/
+	private static class ErrorManager{
+		public static int ERROR_CODE = 1;
+		public static final String ANSI_RESET = "\u001B[0m";
+		public static final String ANSI_RED = "\u001B[31m";
+		public static final String ANSI_YELLOW = "\u001B[33m";
+		private static void printError(int code, String msg){
+			if(code == ERROR_CODE){
+				System.out.println(ANSI_RED + msg + ANSI_RESET);
+			}else{
+				System.out.println(ANSI_YELLOW + msg + ANSI_RESET);
+			}
+		}
 	}
 }
