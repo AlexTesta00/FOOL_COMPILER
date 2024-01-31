@@ -3,8 +3,17 @@ package compiler;
 import java.util.*;
 import compiler.lib.*;
 
+/*
+* AST Class
+* Used for generate Abstract Syntax Three of FOOL Language
+* */
 public class AST {
-	
+
+	/*
+	* ProgLetInNode Class
+	* Represent the principal main node of the AST
+	* It contains the list of declarations and the main expression
+	* */
 	public static class ProgLetInNode extends Node {
 		final List<DecNode> declist;
 		final Node exp;
@@ -17,6 +26,11 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
+	/*
+	 * ProgNode Class
+	 * Represent the main node on AST
+	 * It contains the main expression
+	 * */
 	public static class ProgNode extends Node {
 		final Node exp;
 		ProgNode(Node e) {exp = e;}
@@ -24,7 +38,17 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+	/*
+	 * FunNode Class
+	 * Is an abstraction of the concept of function
+	 * It contains:
+	 * The name of function
+	 * The list of parameters
+	 * The return type of function
+	 * The list of declaration
+	 * The expression contained in body function
+	 * */
 	public static class FunNode extends DecNode {
 		final String id;
 		final TypeNode retType;
@@ -45,6 +69,13 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
+	/*
+	 * ParNode Class
+	 * Is an abstraction of the concept of parameter
+	 * It contains:
+	 * The id of parameter
+	 * The type of parameter
+	 * */
 	public static class ParNode extends DecNode {
 		final String id;
 		ParNode(String i, TypeNode t) {id = i; type = t;}
@@ -52,7 +83,15 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+	/*
+	 * VarNode Class
+	 * Is an abstraction of the concept of variable declaration
+	 * It contains:
+	 * The id of the variable declaration
+	 * The expression of the variable declaration
+	 * The type of the variable declaration
+	 * */
 	public static class VarNode extends DecNode {
 		final String id;
 		final Node exp;
@@ -61,7 +100,13 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-		
+
+	/*
+	 * PrintNode Class
+	 * Is used to print
+	 * It contains:
+	 * The expression to print
+	 * */
 	public static class PrintNode extends Node {
 		final Node exp;
 		PrintNode(Node e) {exp = e;}
@@ -69,7 +114,15 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+	/*
+	 * IfNode Class
+	 * Is an abstraction of the concept of condition
+	 * It contains:
+	 * The condition
+	 * The then clause
+	 * The else clause
+	 * */
 	public static class IfNode extends Node {
 		final Node cond;
 		final Node th;
@@ -79,7 +132,14 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+	/*
+	 * EqualNode Class
+	 * Is an abstraction of the concept of equality
+	 * It contains:
+	 * The left expression
+	 * The right expression
+	 * */
 	public static class EqualNode extends Node {
 		final Node left;
 		final Node right;
@@ -88,7 +148,14 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+	/*
+	 * TimesNode Class
+	 * Is an abstraction of the concept of times operation
+	 * It contains:
+	 * The left expression
+	 * The right expression
+	 * */
 	public static class TimesNode extends Node {
 		final Node left;
 		final Node right;
@@ -97,7 +164,14 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+	/*
+	 * PlusNode Class
+	 * Is an abstraction of the concept of plus operation
+	 * It contains:
+	 * The left expression
+	 * The right expression
+	 * */
 	public static class PlusNode extends Node {
 		final Node left;
 		final Node right;
@@ -106,7 +180,16 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+	/*
+	 * CallNode Class
+	 * Is an abstraction of the concept of a function call
+	 * It contains:
+	 * The id of the caller function
+	 * The list of arguments
+	 * The symbol table entry
+	 * The number of the nesting level for the function context
+	 * */
 	public static class CallNode extends Node {
 		final String id;
 		final List<Node> arglist;
@@ -120,7 +203,15 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+	/*
+	 * IdNode Class
+	 * Is an abstraction of the concept of id for a variable
+	 * It contains:
+	 * The id of the variable
+	 * The entry for the symbol table
+	 * The number of the nesting level
+	 * */
 	public static class IdNode extends Node {
 		final String id;
 		STentry entry;
@@ -130,7 +221,13 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+	/*
+	 * BoolNode Class
+	 * Is an abstraction of the concept of boolean value
+	 * It contains:
+	 * The boolean value
+	 * */
 	public static class BoolNode extends Node {
 		final Boolean val;
 		BoolNode(boolean n) {val = n;}
@@ -138,7 +235,13 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+	/*
+	 * IntNode Class
+	 * Is an abstraction of the concept of integer value
+	 * It contains:
+	 * The integer value
+	 * */
 	public static class IntNode extends Node {
 		final Integer val;
 		IntNode(Integer n) {val = n;}
@@ -146,7 +249,14 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+	/*
+	 * ArrowTypeNode Class
+	 * Is an abstraction of the concept of the arrow type for a function
+	 * It contains:
+	 * The list of parameters of function
+	 * The type of the return
+	 * */
 	public static class ArrowTypeNode extends TypeNode {
 		final List<TypeNode> parlist;
 		final TypeNode ret;
@@ -158,13 +268,21 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+	/*
+	 * BoolTypeNode Class
+	 * Is an abstraction of the concept of boolean value
+	 * */
 	public static class BoolTypeNode extends TypeNode {
 
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
+	/*
+	 * IntTypeNode Class
+	 * Is an abstraction of the concept of integer value
+	 * */
 	public static class IntTypeNode extends TypeNode {
 
 		@Override
@@ -173,7 +291,13 @@ public class AST {
 
 
 	/*----------------------------------------------OPERATOR EXTENSION------------------------------------------------*/
-	/*LE Node*/
+	/*
+	 * LessEqualNode Class
+	 * Is an abstraction of the concept of the less equal evaluation
+	 * It contains:
+	 * The left expression
+	 * The right expression
+	 * */
 	public static class LessEqualNode extends Node{
 		final Node left;
 		final Node right;
@@ -188,7 +312,13 @@ public class AST {
 		}
 	}
 
-	/*GE Node*/
+	/*
+	 * GreaterEqualNode Class
+	 * Is an abstraction of the concept of the greater equal evaluation
+	 * It contains:
+	 * The left expression
+	 * The right expression
+	 * */
 	public static class GreaterEqualNode extends Node{
 		final Node left;
 		final Node right;
@@ -203,7 +333,13 @@ public class AST {
 		}
 	}
 
-	/*OR Node*/
+	/*
+	 * OrNode Class
+	 * Is an abstraction of the concept of or evaluation
+	 * It contains:
+	 * The left expression
+	 * The right expression
+	 * */
 	public static class OrNode extends Node{
 		final Node left;
 		final Node right;
@@ -217,7 +353,14 @@ public class AST {
 			return visitor.visitNode(this);
 		}
 	}
-	/*AND Node*/
+
+	/*
+	 * AndNode Class
+	 * Is an abstraction of the concept of and evaluation
+	 * It contains:
+	 * The left expression
+	 * The right expression
+	 * */
 	public static class AndNode extends Node{
 		final Node left;
 		final Node right;
@@ -231,7 +374,14 @@ public class AST {
 			return visitor.visitNode(this);
 		}
 	}
-	/*DIV Node*/
+
+	/*
+	 * DivNode Class
+	 * Is an abstraction of the concept of div operation
+	 * It contains:
+	 * The left expression
+	 * The right expression
+	 * */
 	public static class DivNode extends Node{
 		final Node left;
 		final Node right;
@@ -245,7 +395,14 @@ public class AST {
 			return visitor.visitNode(this);
 		}
 	}
-	/*MINUS Node*/
+
+	/*
+	 * MinusNode Class
+	 * Is an abstraction of the concept of minus operation
+	 * It contains:
+	 * The left expression
+	 * The right expression
+	 * */
 	public static class MinusNode extends Node{
 		final Node left;
 		final Node right;
@@ -259,7 +416,13 @@ public class AST {
 			return visitor.visitNode(this);
 		}
 	}
-	/*NOT Node*/
+
+	/*
+	 * NotNode Class
+	 * Is an abstraction of the concept of negation for expression
+	 * It contains:
+	 * The expression to negate
+	 * */
 	public static class NotNode extends Node{
 		final Node exp;
 
