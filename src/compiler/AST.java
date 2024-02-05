@@ -434,4 +434,81 @@ public class AST {
 			return visitor.visitNode(this);
 		}
 	}
+
+	/*----------------------------------------------CLASS EXTENSION---------------------------------------------------*/
+
+	/*
+	 * FieldNode Class
+	 * Is an abstraction of the concept of a field in a class
+	 * It contains:
+	 * The id of the field
+	 * The type of the field
+	 * */
+	public static class FieldNode extends DecNode{
+		final String id;
+		public FieldNode(String id, TypeNode typeNode){
+			this.id = id;
+			this.type = typeNode;
+		}
+
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	/*
+	 * MethodNode Class
+	 * Is an abstraction of the concept of a method in a class
+	 * It contains:
+	 * The id of the method
+	 * The parameter list of the method
+	 * The list of declaration in method
+	 * The return type of the method
+	 * The body (exp) of the method
+	 * */
+	public static class MethodNode extends DecNode{
+		final String id;
+		final List<ParNode> parList;
+		final List<DecNode> decList;
+		final TypeNode retType;
+		final Node exp;
+
+		public MethodNode(String id, List<ParNode> parList, List<DecNode> decList, TypeNode retType, Node body){
+			this.id = id;
+			this.parList = parList;
+			this.decList = decList;
+			this.retType = retType;
+			this.exp = body;
+		}
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	/*
+	* ClassNode Class
+	* Is an abstraction of the concept of a class
+	* It contains:
+	* The id of the class
+	* The filed or attribute list
+	* The method list
+	* */
+	public static class ClassNode extends DecNode{
+		final String id;
+		final List<FieldNode> fieldNodeList;
+		final List<MethodNode> methodNodeList;
+
+		public ClassNode(String id, List<FieldNode> field, List<MethodNode> methodList){
+			this.id = id;
+			this.fieldNodeList = Collections.unmodifiableList(field); //fieldNodeList is immutable
+			this.methodNodeList = Collections.unmodifiableList(methodList); //methodList is immutable
+		}
+
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
 }
