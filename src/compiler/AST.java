@@ -539,4 +539,42 @@ public class AST {
 			return visitor.visitNode(this);
 		}
 	}
+
+	/*
+	 * NewNode Class
+	 * Is an abstraction of the concept of new instance
+	 * It contains:
+	 * The id of the new class instance
+	 * The list of arguments
+	 * */
+	public static class NewNode extends DecNode{
+		final String id;
+		final List<Node> arg;
+
+		//TODO
+
+		public NewNode(String id, List<Node> arg){
+			this.id = id;
+			this.arg = Collections.unmodifiableList(arg);
+		}
+
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	/*
+	 * EmptyNode Class
+	 * Is an abstraction of the concept of the null operand
+	 * */
+	public static class EmptyNode extends DecNode{
+
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+
 }

@@ -231,4 +231,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		notNode.setLine(c.NOT().getSymbol().getLine());
 		return notNode;
 	}
+
+	/*----------------------------------------------CLASS EXTENSION---------------------------------------------------*/
+
 }
