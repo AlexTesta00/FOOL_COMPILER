@@ -473,11 +473,12 @@ public class AST {
 		final List<DecNode> decList;
 		final TypeNode retType;
 		final Node exp;
+		//TODO
 
 		public MethodNode(String id, List<ParNode> parList, List<DecNode> decList, TypeNode retType, Node body){
 			this.id = id;
-			this.parList = parList;
-			this.decList = decList;
+			this.parList = Collections.unmodifiableList(parList); //parList is immutable
+			this.decList = Collections.unmodifiableList(decList); //decList is immutable
 			this.retType = retType;
 			this.exp = body;
 		}
@@ -504,6 +505,33 @@ public class AST {
 			this.id = id;
 			this.fieldNodeList = Collections.unmodifiableList(field); //fieldNodeList is immutable
 			this.methodNodeList = Collections.unmodifiableList(methodList); //methodList is immutable
+		}
+
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	/*
+	 * ClassCallNode Class
+	 * Is an abstraction of the concept of call for a class
+	 * It contains:
+	 * The id of the call
+	 * The id of the method
+	 * The list of arguments
+	 * */
+	public static class ClassCallNode extends DecNode{
+
+		final String id;
+		final String idMethod;
+		final List<Node> arg;
+		//TODO
+
+		public ClassCallNode(String id, String idMethod, List<Node> arg){
+			this.id = id;
+			this.idMethod = idMethod;
+			this.arg = Collections.unmodifiableList(arg);
 		}
 
 		@Override
