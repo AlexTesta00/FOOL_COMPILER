@@ -6,8 +6,9 @@ import compiler.exc.*;
 import compiler.lib.*;
 
 public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
-	
-	private List<Map<String, STentry>> symTable = new ArrayList<>();
+
+	private final Map<String, Map<String, STentry>> classTable = new HashMap<>(); //Map<String, STentry> is the virtual table
+	private final List<Map<String, STentry>> symTable = new ArrayList<>();
 	private int nestingLevel=0; // current nesting level
 	private int decOffset=-2; // counter for offset of local declarations at current nesting level 
 	int stErrors=0;
@@ -235,12 +236,116 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		return null;
 	}
 
+	/*----------------------------------------------CLASS EXTENSION---------------------------------------------------*/
 
+	@Override
+	public Void visitNode(ClassNode n) throws VoidException {
+		if (print) printNode(n, n.id);
 
+		//TODO: For ereditareties
+
+		//Create a classTypeNode variable, that's represent the type of the class
+		ClassTypeNode classTypeNode = new ClassTypeNode(new ArrayList<>(), new ArrayList<>());
+
+		//Create the entry for the class
+		STentry sTentry = new STentry(0, classTypeNode, decOffset--);
+
+		//Offset for visit the fields in class
+		int classFieldsOffset = -1;
+
+		//Container of the fields names
+		Set<String> fieldsContainer = new HashSet<>();
+
+		//Container of method for the class
+		List<String> methodContainer = new ArrayList<>();
+
+		//Utils for store old decOffset
+		int oldStepDecOffset = 0;
+
+		//Check if the class is already declared in global scope (at nesting level 0)
+		if(symTable.get(nestingLevel).containsKey(n.id)){
+			ErrorManager.printError(ErrorManager.WARNING_CODE,
+					"Class: " + n.id + " at line: " + n.getLine() + " is already declared");
+		}
+
+		//Add the class to the class and symbol table
+		Map<String, STentry> virtualClassTable = new HashMap<>();
+		this.classTable.put(n.id, virtualClassTable);
+		this.symTable.add(virtualClassTable);
+
+		//This is it because the fields and method for the scope in class is a nesting level one
+		nestingLevel++;
+
+		/* Fields in class */
+		//Add the fields in the fieldsContainer and visit all fields
+		n.fieldNodeList.forEach((field) ->{
+			String fieldId = field.id;
+			if (fieldsContainer.contains(fieldId)) {
+				ErrorManager.printError(ErrorManager.WARNING_CODE,
+						"Field: " + fieldId + " at line: " + n.getLine() + " is already declared");
+				stErrors++;
+			}else{
+				fieldsContainer.add(fieldId);
+			}
+
+			//Visit the field and add in the virtual table
+			visit(field);
+
+			STentry fieldEntry = new STentry(nestingLevel, field.getType(), classFieldsOffset);
+			classTypeNode.allFields.add(-fieldEntry.offset - 1, fieldEntry.type);
+			virtualClassTable.put(fieldId, fieldEntry);
+		});
+
+		/* Method in class */
+		oldStepDecOffset = decOffset;
+		decOffset = 0;
+		n.methodNodeList.forEach((method) -> {
+			//Chek if the method is already declared
+			String methodId = method.id;
+			if (methodContainer.contains(methodId)) {
+				ErrorManager.printError(ErrorManager.WARNING_CODE,
+						"Method: " + methodId + " at line: " + n.getLine() + " is already declared");
+				stErrors++;
+			}else{
+				methodContainer.add(methodId);
+			}
+
+			//Visit the method and add in the virtual table
+			visit(method);
+			classTypeNode.allMethods.add(method.offset,
+										((MethodTypeNode) symTable.get(nestingLevel).get(methodId).type).fun);
+		});
+		//Return to the old offset
+		decOffset = oldStepDecOffset;
+		symTable.remove(nestingLevel--);
+
+		return null;
+	}
+
+	@Override
+	public Void visitNode(MethodNode n) throws VoidException {
+		return null;
+	}
+
+	@Override
+	public Void visitNode(ClassCallNode node) throws VoidException {
+		return null;
+	}
+
+	@Override
+	public Void visitNode(NewNode n) throws VoidException {
+		return null;
+	}
+
+	@Override
+	public Void visitNode(EmptyNode n) throws VoidException {
+		return null;
+	}
 
 	/*----------------------------------------------ERROR MANAGER------------------------------------------------*/
 	private static class ErrorManager{
 		public static int ERROR_CODE = 1;
+		public static int WARNING_CODE = 0;
 		public static final String ANSI_RESET = "\u001B[0m";
 		public static final String ANSI_RED = "\u001B[31m";
 		public static final String ANSI_YELLOW = "\u001B[33m";

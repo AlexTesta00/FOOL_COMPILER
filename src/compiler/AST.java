@@ -473,7 +473,8 @@ public class AST {
 		final List<DecNode> decList;
 		final TypeNode retType;
 		final Node exp;
-		//TODO
+		String label;
+		int offset = 0;
 
 		public MethodNode(String id, List<ParNode> parList, List<DecNode> decList, TypeNode retType, Node body){
 			this.id = id;
