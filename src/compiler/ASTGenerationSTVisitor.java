@@ -233,5 +233,4 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 	}
 
 	/*----------------------------------------------CLASS EXTENSION---------------------------------------------------*/
-
 }

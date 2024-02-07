@@ -63,7 +63,7 @@ public class AST {
 	    	exp=e;
 	    }
 		
-		//void setType(TypeNode t) {type = t;}
+		void setType(TypeNode t) {type = t;}
 		
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
@@ -500,6 +500,7 @@ public class AST {
 		final String id;
 		final List<FieldNode> fieldNodeList;
 		final List<MethodNode> methodNodeList;
+		//TODO
 
 		public ClassNode(String id, List<FieldNode> field, List<MethodNode> methodList){
 			this.id = id;
@@ -521,7 +522,7 @@ public class AST {
 	 * The id of the method
 	 * The list of arguments
 	 * */
-	public static class ClassCallNode extends DecNode{
+	public static class ClassCallNode extends Node{
 
 		final String id;
 		final String idMethod;
@@ -547,7 +548,7 @@ public class AST {
 	 * The id of the new class instance
 	 * The list of arguments
 	 * */
-	public static class NewNode extends DecNode{
+	public static class NewNode extends Node{
 		final String id;
 		final List<Node> arg;
 
@@ -566,15 +567,89 @@ public class AST {
 
 	/*
 	 * EmptyNode Class
-	 * Is an abstraction of the concept of the null operand
+	 * Is an abstraction of the concept of the null
 	 * */
-	public static class EmptyNode extends DecNode{
+	public static class EmptyNode extends Node{
 
 		@Override
 		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
 			return visitor.visitNode(this);
 		}
 	}
+
+	/*
+	 * ClassTypeNode Class
+	 * Is an abstraction of the concept of the class type
+	 * It's contains:
+	 * The list of the type of all field
+	 * The list of the type of all method
+	 * */
+	public static class ClassTypeNode extends TypeNode{
+		final List<TypeNode> allFields;
+		final List<TypeNode> allMethods;
+
+		public ClassTypeNode(List<TypeNode> allFields, List<TypeNode> allMethods){
+			this.allFields = new ArrayList<>(Collections.unmodifiableList(allFields)); //allFields is immutable
+			this.allMethods = new ArrayList<>(Collections.unmodifiableList(allMethods)); //allMethods is immutable
+		}
+
+		//TODO
+
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	/*
+	 * MethodTypeNode Class
+	 * Is an abstraction of the concept of the method in class
+	 * It's contains:
+	 * The functional type of the method
+	 * */
+	public static class MethodTypeNode extends TypeNode{
+		final ArrowTypeNode fun;
+
+		public MethodTypeNode(ArrowTypeNode fun){
+			this.fun = fun;
+		}
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	/*
+	 * RefTypeNode Class
+	 * Is an abstraction of the concept of the reference of class
+	 * It's contains:
+	 * The id of the class like attributes
+	 * */
+	public static class RefTypeNode extends TypeNode{
+		final String id;
+
+		public RefTypeNode(String id){
+			this.id = id;
+		}
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	/*
+	 * EmptyTypeNode Class
+	 * Is an abstraction of the concept of the null
+	 * */
+	public static class EmptyTypeNode extends TypeNode{
+
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+
 
 
 }
