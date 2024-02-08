@@ -215,7 +215,7 @@ public class AST {
 	public static class IdNode extends Node {
 		final String id;
 		STentry entry;
-		int nl;
+		int nestingLevel;
 		IdNode(String i) {id = i;}
 
 		@Override

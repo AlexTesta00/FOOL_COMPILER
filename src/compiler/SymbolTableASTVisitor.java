@@ -165,7 +165,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			stErrors++;
 		} else {
 			n.entry = entry;
-			n.nl = nestingLevel;
+			n.nestingLevel = nestingLevel;
 		}
 		return null;
 	}

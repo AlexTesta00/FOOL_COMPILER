@@ -233,4 +233,34 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 	}
 
 	/*----------------------------------------------CLASS EXTENSION---------------------------------------------------*/
+
+	@Override
+	public Node visitCldec(CldecContext ctx) {
+		return null;
+	}
+
+	@Override
+	public Node visitMethdec(MethdecContext ctx) {
+		return null;
+	}
+
+	@Override
+	public Node visitNew(NewContext ctx) {
+		return null;
+	}
+
+	@Override
+	public Node visitNull(NullContext ctx) {
+		return null;
+	}
+
+	@Override
+	public Node visitDotCall(DotCallContext ctx) {
+		return null;
+	}
+
+	@Override
+	public Node visitIdType(IdTypeContext ctx) {
+		return null;
+	}
 }

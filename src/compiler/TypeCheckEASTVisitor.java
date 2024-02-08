@@ -113,24 +113,42 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	@Override
 	public TypeNode visitNode(CallNode n) throws TypeException {
 		if (print) printNode(n,n.id);
-		TypeNode t = visit(n.entry); 
-		if ( !(t instanceof ArrowTypeNode) )
-			throw new TypeException("Invocation of a non-function "+n.id,n.getLine());
-		ArrowTypeNode at = (ArrowTypeNode) t;
+
+		TypeNode t = visit(n.entry);
+
+		//If is a method, get the functional type
+		if(t instanceof  MethodTypeNode methodTypeNode){
+			t = methodTypeNode.fun;
+		}
+		if ( !(t instanceof ArrowTypeNode at) )
+			throw new TypeException("Invocation of a non-function " + n.id, n.getLine());
+
+		//Check if the number of parameters is correct
 		if ( !(at.parlist.size() == n.arglist.size()) )
-			throw new TypeException("Wrong number of parameters in the invocation of "+n.id,n.getLine());
+			throw new TypeException("Wrong number of parameters in the invocation of " + n.id,n.getLine());
+
+		//Check if the type of parameters is correct
 		for (int i = 0; i < n.arglist.size(); i++)
 			if ( !(isSubtype(visit(n.arglist.get(i)),at.parlist.get(i))) )
-				throw new TypeException("Wrong type for "+(i+1)+"-th parameter in the invocation of "+n.id,n.getLine());
+				throw new TypeException("Wrong type for " + ( i + 1) + "-th parameter in the invocation of " + n.id,n.getLine());
 		return at.ret;
 	}
 
 	@Override
 	public TypeNode visitNode(IdNode n) throws TypeException {
 		if (print) printNode(n,n.id);
-		TypeNode t = visit(n.entry); 
+		TypeNode t = visit(n.entry);
+
+		//Check if the id isn't a ArrowTypeNode or MethodTypeNode or ClassTypeNode
 		if (t instanceof ArrowTypeNode)
 			throw new TypeException("Wrong usage of function identifier " + n.id,n.getLine());
+
+		if (t instanceof MethodTypeNode)
+			throw new TypeException("Wrong usage of method identifier " + n.id,n.getLine());
+
+		if (t instanceof ClassTypeNode)
+			throw new TypeException("Wrong usage of class identifier " + n.id,n.getLine());
+
 		return t;
 	}
 
@@ -247,4 +265,139 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return new BoolTypeNode();
 	}
 
+	/*----------------------------------------------CLASS EXTENSION---------------------------------------------------*/
+
+
+	@Override
+	public TypeNode visitNode(ClassNode n) throws TypeException {
+		if(print) printNode(n, n.id);
+		//TODO Ereditarietis
+
+		//Check if the methods in class have a correct type
+		//Visit all method of the class
+		n.methodNodeList.forEach((method) ->{
+			try {
+				visit(method);
+			}catch (TypeException e){
+				ErrorManager.printError(ErrorManager.ERROR_CODE,
+						"Class declaration error (type checking): " + e.text);
+			}
+		});
+		return null;
+	}
+
+	@Override
+	public TypeNode visitNode(FieldNode n){
+		if (print) printNode(n);
+		return null;
+	}
+
+	@Override
+	public TypeNode visitNode(MethodNode n) throws TypeException {
+		if (print) printNode(n,n.id);
+		for (Node dec : n.decList)
+			try {
+				visit(dec);
+			} catch (IncomplException e) {
+			} catch (TypeException e) {
+				ErrorManager.printError(ErrorManager.WARNING_CODE,
+						"Type checking error in a declaration: " + e.text);
+			}
+		if ( !isSubtype(visit(n.exp),ckvisit(n.retType)) )
+			throw new TypeException("Wrong return type for function " + n.id,n.getLine());
+		return null;
+	}
+
+	@Override
+	public TypeNode visitNode(ClassCallNode n) throws TypeException {
+		if (print) printNode(n,n.id);
+
+		TypeNode t = visit(n.methodEntry);
+
+		//If is a method, get the functional type
+		if(t instanceof  MethodTypeNode methodTypeNode){
+			t = methodTypeNode.fun;
+		}
+		if ( !(t instanceof ArrowTypeNode at) )
+			throw new TypeException("Invocation of a non-function " + n.id, n.getLine());
+
+		//Check if the number of parameters is correct
+        if ( !(at.parlist.size() == n.arg.size()) )
+			throw new TypeException("Wrong number of parameters in the invocation of " + n.id,n.getLine());
+
+		//Check if the type of parameters is correct
+		for (int i = 0; i < n.arg.size(); i++)
+			if ( !(isSubtype(visit(n.arg.get(i)),at.parlist.get(i))) )
+				throw new TypeException("Wrong type for " + ( i + 1) + "-th parameter in the invocation of " + n.id,n.getLine());
+		return at.ret;
+	}
+
+	@Override
+	public TypeNode visitNode(NewNode n) throws TypeException {
+		if (print) printNode(n,n.id);
+
+		TypeNode t = visit(n.entry);
+
+		//Check if the type is ClassTypeNode
+		if(!(t instanceof  ClassTypeNode classTypeNode)){
+			throw new TypeException("Invocation of a non-class constructor " + n.id, n.getLine());
+		}
+
+		//Check if the number of parameters is correct in class constructor
+		if (classTypeNode.allFields.size() == n.arg.size())
+			throw new TypeException("Wrong number of parameters in the invocation of a class constructor" + n.id,n.getLine());
+
+		//Check if the type of parameters is correct in class constructor
+		for (int i = 0; i < n.arg.size(); i++)
+			if ( !(isSubtype(visit(n.arg.get(i)), classTypeNode.allFields.get(i))) )
+				throw new TypeException("Wrong type for " + ( i + 1) + "-th parameter in the invocation of constructor" + n.id,n.getLine());
+		return new RefTypeNode(n.id);
+	}
+
+	@Override
+	public TypeNode visitNode(EmptyNode n) throws TypeException {
+		return new EmptyTypeNode();
+	}
+
+	@Override
+	public TypeNode visitNode(ClassTypeNode n){
+		if (print) printNode(n);
+		return null;
+	}
+
+	@Override
+	public TypeNode visitNode(MethodTypeNode n){
+		if (print) printNode(n);
+		return null;
+	}
+
+	@Override
+	public TypeNode visitNode(RefTypeNode n){
+		if (print) printNode(n);
+		return null;
+	}
+
+	@Override
+	public TypeNode visitNode(EmptyTypeNode n){
+		if (print) printNode(n);
+		return null;
+	}
+
+
+
+	/*----------------------------------------------ERROR MANAGER------------------------------------------------*/
+	private static class ErrorManager{
+		public static int ERROR_CODE = 1;
+		public static int WARNING_CODE = 0;
+		public static final String ANSI_RESET = "\u001B[0m";
+		public static final String ANSI_RED = "\u001B[31m";
+		public static final String ANSI_YELLOW = "\u001B[33m";
+		private static void printError(int code, String msg){
+			if(code == ERROR_CODE){
+				System.out.println(ANSI_RED + msg + ANSI_RESET);
+			}else{
+				System.out.println(ANSI_YELLOW + msg + ANSI_RESET);
+			}
+		}
+	}
 }
