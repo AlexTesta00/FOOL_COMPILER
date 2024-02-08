@@ -1,6 +1,8 @@
 package compiler;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import compiler.AST.*;
 import compiler.exc.*;
 import compiler.lib.*;
@@ -9,9 +11,9 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 	private final Map<String, Map<String, STentry>> classTable = new HashMap<>(); //Map<String, STentry> is the virtual table
 	private final List<Map<String, STentry>> symTable = new ArrayList<>();
-	private int nestingLevel=0; // current nesting level
-	private int decOffset=-2; // counter for offset of local declarations at current nesting level 
-	int stErrors=0;
+	private int nestingLevel = 0; // current nesting level
+	private int decOffset = -2; // counter for offset of local declarations at current nesting level
+	int stErrors = 0;
 
 	SymbolTableASTVisitor() {}
 	SymbolTableASTVisitor(boolean debug) {super(debug);} // enables print for debugging
@@ -322,23 +324,148 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		return null;
 	}
 
+	/*
+	* Visit the field in a class
+	* */
 	@Override
-	public Void visitNode(MethodNode n) throws VoidException {
+	public Void visitNode(FieldNode n){
+		if(print) printNode(n);
 		return null;
 	}
 
 	@Override
-	public Void visitNode(ClassCallNode node) throws VoidException {
+	public Void visitNode(MethodNode n) throws VoidException {
+		if(print) printNode(n);
+
+		//The local symbolTable
+		Map<String, STentry> localTable = symTable.get(nestingLevel);
+
+		//Get the param of the method
+		List<TypeNode> params = n.parList.stream().map(ParNode::getType).toList();
+
+		//Create a new MethodTypeNode to add this at the symbol table
+		MethodTypeNode methodTypeNode = new MethodTypeNode(new ArrowTypeNode(params, n.retType));
+
+		//Create the STentry to adding at the symbol table
+		STentry sTentry = new STentry(nestingLevel, methodTypeNode, decOffset++);
+
+		//TODO ereditarieties
+
+		//Update offset and put the entry in local symbol table
+		n.offset = sTentry.offset;
+		localTable.put(n.id, sTentry);
+
+		//Create a new table for the symbol table
+		Map<String, STentry> currentMethodTable = new HashMap<>();
+
+		//Update the nesting level
+		nestingLevel++;
+
+		//Adding currentMethodTable to the symbol table
+		symTable.add(currentMethodTable);
+
+		//Adjoust the offset
+		int oldStep = decOffset;
+		decOffset = -2;
+		AtomicInteger parOffset = new AtomicInteger(1);
+
+		//For all parameters, create the STentry and add it to the symbol table.
+		//If the parameter is alredy exist in the symbol table, manage error
+		n.parList.forEach((param) -> {
+			STentry parEntry = new STentry(nestingLevel, param.getType(), parOffset.getAndIncrement());
+			if(currentMethodTable.put(param.id, parEntry) != null){
+				ErrorManager.printError(ErrorManager.WARNING_CODE,
+						"Par: " + param.id + " at line: " + n.getLine() + " already declared");
+				stErrors++;
+			}
+		});
+
+		//Visit all node
+		n.decList.forEach(this::visit);
+		visit(n.exp);
+
+		//Restore the symbol table
+		symTable.remove(nestingLevel--);
+		decOffset = oldStep;
+
+		return null;
+	}
+
+	@Override
+	public Void visitNode(ClassCallNode n) throws VoidException {
+		if(print) printNode(n);
+
+		STentry sTentry = stLookup(n.id);
+
+		//Check if the id of class is present in the symbolTable
+		if(sTentry == null){
+			ErrorManager.printError(ErrorManager.ERROR_CODE, "Id: " + n.id + "wasn't declared");
+			stErrors++;
+			//If the class is in the symbol table, check the RefType
+		}else if(sTentry.type instanceof RefTypeNode){
+			n.entry = sTentry;
+			n.nestingLevel = nestingLevel;
+			Map<String, STentry> virtualTable = this.classTable.get(((RefTypeNode) sTentry.type).id);
+			//If the class is RefType, check it's in virtuale table
+			if(virtualTable.containsKey(n.methodId)){
+				n.methodEntry = virtualTable.get(n.methodId);
+			}else{
+				ErrorManager.printError(ErrorManager.WARNING_CODE,
+						"Id: " + n.id + " at line: " + n.getLine() + " has no method: " + n.methodId);
+				stErrors++;
+			}
+		}else{
+			ErrorManager.printError(ErrorManager.WARNING_CODE,
+					"Id: " + n.id + " at line: " + n.getLine() + " isn't RefType");
+			stErrors++;
+		}
+		//Visit all arguments
+		n.arg.forEach(this::visit);
+
 		return null;
 	}
 
 	@Override
 	public Void visitNode(NewNode n) throws VoidException {
+		if(print) printNode(n);
+
+		//Check if the class exist
+		if(!this.classTable.containsKey(n.id)){
+			ErrorManager.printError(ErrorManager.ERROR_CODE,
+					"Class: " + n.id + " was not declared");
+			stErrors++;
+		}
+
+		//If the class exist, set the entry
+		n.entry = symTable.get(nestingLevel).get(n.id);
+		n.nestingLevel = nestingLevel;
+
+		//Visit all arguments
+		n.arg.forEach(this::visit);
 		return null;
 	}
 
 	@Override
 	public Void visitNode(EmptyNode n) throws VoidException {
+		if(print) printNode(n);
+		return null;
+	}
+
+	@Override
+	public Void visitNode(ClassTypeNode n) throws VoidException {
+		if(print) printNode(n);
+		return null;
+	}
+
+	@Override
+	public Void visitNode(MethodTypeNode n) throws VoidException {
+		if(print) printNode(n);
+		return null;
+	}
+
+	@Override
+	public Void visitNode(RefTypeNode n) throws VoidException {
+		if(print) printNode(n);
 		return null;
 	}
 

@@ -526,13 +526,15 @@ public class AST {
 	public static class ClassCallNode extends Node{
 
 		final String id;
-		final String idMethod;
+		final String methodId;
 		final List<Node> arg;
-		//TODO
+		STentry entry;
+		STentry methodEntry;
+		int nestingLevel = 0;
 
-		public ClassCallNode(String id, String idMethod, List<Node> arg){
+		public ClassCallNode(String id, String methodId, List<Node> arg){
 			this.id = id;
-			this.idMethod = idMethod;
+			this.methodId = methodId;
 			this.arg = Collections.unmodifiableList(arg);
 		}
 
@@ -552,8 +554,8 @@ public class AST {
 	public static class NewNode extends Node{
 		final String id;
 		final List<Node> arg;
-
-		//TODO
+		STentry entry;
+		int nestingLevel;
 
 		public NewNode(String id, List<Node> arg){
 			this.id = id;
