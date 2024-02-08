@@ -3,6 +3,11 @@ package compiler;
 import compiler.AST.*;
 import compiler.lib.*;
 import compiler.exc.*;
+import svm.ExecuteVM;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import static compiler.lib.FOOLlib.*;
 
 public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidException> {
@@ -136,6 +141,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	@Override
 	public String visitNode(CallNode n) {
 		if (print) printNode(n,n.id);
+
 		String argCode = null, getAR = null;
 		for (int i=n.arglist.size()-1;i>=0;i--) argCode=nlJoin(argCode,visit(n.arglist.get(i)));
 		for (int i = 0;i<n.nl-n.entry.nl;i++) getAR=nlJoin(getAR,"lw");
@@ -147,7 +153,10 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
             "stm", // set $tm to popped value (with the aim of duplicating top of stack)
             "ltm", // load Access Link (pointer to frame of function "id" declaration)
             "ltm", // duplicate top of stack
-            "push "+n.entry.offset, "add", // compute address of "id" declaration
+
+			(n.entry.type instanceof MethodTypeNode) ? "lw" : "", // Recover address of method in dispatch table for jump
+            "push " + n.entry.offset,
+			"add", // compute address of "id" declaration
 			"lw", // load address of "id" function
             "js"  // jump to popped address (saving address of subsequent instruction in $ra)
 		);
@@ -296,4 +305,154 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 
 	/*----------------------------------------------CLASS EXTENSION---------------------------------------------------*/
 
+	@Override
+	public String visitNode(ClassNode n) throws VoidException {
+		if (print) printNode(n);
+
+		//Create dispatch tables
+		List<String> dispatchTable = new ArrayList<>();
+		//TODO ereditarietes
+
+		//Check the method in order
+		n.methodNodeList.forEach((method) ->{
+			//Visit the element
+			visit(method);
+
+			//Read label and Update Dispatch Tables
+			dispatchTable.set(method.offset, method.label);
+		});
+
+		String dispatchCode = "";
+		for (final String label : dispatchTable) {
+			dispatchCode = nlJoin(
+					dispatchCode,
+
+					// Store the label of the method in heap
+					"push " + label,       // Push label of method
+					"lhp",  			   // Push the heap pointer
+					"sw",         		   // Store the label of the method in the heap
+					"lhp",  			   // Increment heap pointer and push heap pointer
+					"push 1",              // Push 1
+					"add",                 // Heap pointer + 1
+					"shp"                  // Store heap pointer
+
+			);
+		}
+
+		return nlJoin(
+				"lhp",
+				dispatchCode //Add the code of the dispatch table
+		);
+	}
+
+	@Override
+	public String visitNode(MethodNode n) throws VoidException {
+		if (print) printNode(n);
+
+		//Generate label for the new address
+        n.label = freshLabel();
+
+		String declCode = null;
+		String popDecl = null;
+		String popParl = null;
+		for (Node dec : n.decList) {
+			declCode = nlJoin(declCode,visit(dec));
+			popDecl = nlJoin(popDecl,"pop");
+		}
+		for (int i=0;i<n.parList.size();i++) popParl = nlJoin(popParl,"pop");
+
+		putCode(
+				nlJoin(
+						n.label + ":",
+						"cfp", // set $fp to $sp value
+						"lra", // load $ra value
+						declCode, // generate code for local declarations (they use the new $fp!!!)
+						visit(n.exp), // generate code for function body expression
+						"stm", // set $tm to popped value (function result)
+						popDecl, // remove local declarations from stack
+						"sra", // set $ra to popped value
+						"pop", // remove Access Link from stack
+						popParl, // remove parameters from stack
+						"sfp", // set $fp to popped value (Control Link)
+						"ltm", // load $tm value (function result)
+						"lra", // load $ra value
+						"js"  // jump to popped address
+				)
+		);
+		return null;
+	}
+
+	@Override
+	public String visitNode(ClassCallNode n) throws VoidException {
+		if (print) printNode(n,n.id);
+		String argCode = null;
+		String getAR = null;
+		for (int i = n.arg.size()-1; i >= 0; i--) argCode = nlJoin(argCode, visit(n.arg.get(i)));
+		for (int i = 0; i<n.nestingLevel - n.entry.nl; i++) getAR = nlJoin(getAR,"lw");
+		return nlJoin(
+				"lfp", // load Control Link (pointer to frame of function "id" caller)
+				argCode, // generate code for argument expressions in reversed order
+				"lfp", getAR, // retrieve address of frame containing "id" declaration
+				// by following the static chain (of Access Links)
+				"push " + n.entry.offset, //push the class offset on the stack
+				"add", //Put the class offset to ar register
+				"lw", //load the class
+				"stm", // set $tm to popped value (with the aim of duplicating top of stack)
+				"ltm", // Put the class address on the stack
+				"ltm", // duplicate top of stack
+				"lw", // load dispatch table
+				"push " + n.methodEntry.offset, // push the offset of the method on the stack
+				"add", // add the offset of the method to dispatch table
+				"lw", // load address of method
+				"js"  // jump to popped address (saving address of subsequent instruction in $ra)
+		);
+	}
+
+	@Override
+	public String visitNode(NewNode n) throws VoidException {
+		if (print) printNode(n);
+
+		//Call it on the all arguments in order of their appears
+		String argumentsCode = "";
+		for(Node argument: n.arg){
+			argumentsCode = nlJoin(
+					argumentsCode,
+					visit(argument)
+			);
+		}
+
+		String heapCode = "";
+		for(Node argument: n.arg){
+			heapCode = nlJoin(
+					heapCode,
+					//Load argument for the heap
+					"lhp", // push hp register on the stack
+					"sw",  // store argument for the heap
+					"lhp", // push hp register on the stack
+					"push 1", // push 1 on the stack
+					"add", // add 1 to the hp register
+					"shp" // store hp register
+			);
+		}
+
+		return nlJoin(
+				argumentsCode, // create arguments
+				heapCode, // manage arguments on the heap
+				"push " + (ExecuteVM.MEMSIZE + n.entry.offset), // push class address on the stack
+				"lw", // load dispatch table address
+				"lhp", // push hp register on the stack
+				"sw", // store dispatch table address on the heap
+				"lhp", // push hp register object address on the stack
+				"lhp", // push hp register on the stack
+				"push 1", // push 1 on the stack
+				"add", // add 1 to hp register
+				"shp" // store in hp register
+		);
+	}
+
+	@Override
+	public String visitNode(EmptyNode n) throws VoidException {
+		if (print) printNode(n);
+		return "push -1";
+	}
 }

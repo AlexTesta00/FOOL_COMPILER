@@ -1,0 +1,9 @@
+let
+  class Users (name:int, sex:bool) {
+    fun getName: int () name;
+    fun getSex: bool () sex;
+  }
+
+  var user:Users = new Users(10, false);
+in
+    print(if(user.name() <= 10) then {20} else {1});
