@@ -251,18 +251,18 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		ClassTypeNode classTypeNode = new ClassTypeNode(new ArrayList<>(), new ArrayList<>());
 
 		//Create the entry for the class
-		STentry sTentry = new STentry(0, classTypeNode, decOffset--);
+		STentry sTentry = new STentry(GLOBAL_SCOPE, classTypeNode, decOffset--);
 
-		//Put the entry in the global scope
-		Map<String, STentry> symbolTable = symTable.get(0);
-		if(symbolTable.put(n.id, sTentry) != null){
+		//Put the entry in the global scope for checking duplicate
+		Map<String, STentry> globalSymbolTable = symTable.get(GLOBAL_SCOPE);
+		if(globalSymbolTable.put(n.id, sTentry) != null){
 			ErrorManager.printError(ErrorManager.WARNING_CODE,
 					"Class: " + n.id + " at line: " + n.getLine() + " is already declared");
 			stErrors++;
 		}
 
 		//Offset for visit the fields in class
-		int classFieldsOffset = -1;
+		AtomicInteger classFieldsOffset = new AtomicInteger(-1);
 
 		//Container of the fields names
 		Set<String> fieldsContainer = new HashSet<>();
@@ -272,12 +272,6 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 		//Utils for store old decOffset
 		int oldStepDecOffset = 0;
-
-		//Check if the class is already declared in global scope (at nesting level 0)
-		if(symTable.get(nestingLevel).containsKey(n.id)){
-			ErrorManager.printError(ErrorManager.WARNING_CODE,
-					"Class: " + n.id + " at line: " + n.getLine() + " is already declared");
-		}
 
 		//Add the class to the class and symbol table
 		Map<String, STentry> virtualClassTable = new HashMap<>();
@@ -302,7 +296,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			//Visit the field and add in the virtual table
 			visit(field);
 
-			STentry fieldEntry = new STentry(nestingLevel, field.getType(), classFieldsOffset);
+			STentry fieldEntry = new STentry(nestingLevel, field.getType(), classFieldsOffset.getAndDecrement());
 			classTypeNode.allFields.add(-fieldEntry.offset - 1, fieldEntry.type);
 			virtualClassTable.put(fieldId, fieldEntry);
 		});
