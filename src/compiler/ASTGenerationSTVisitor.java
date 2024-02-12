@@ -1,6 +1,8 @@
 package compiler;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -12,6 +14,7 @@ import static compiler.lib.FOOLlib.*;
 
 public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 
+	public static int GLOBAL_SCOPE = 0;
 	String indent;
     public boolean print;
 	
@@ -45,9 +48,23 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 	@Override
 	public Node visitLetInProg(LetInProgContext c) {
 		if (print) printVarAndProdName(c);
+
+		//Read all class declaration
+		List<DecNode> allDeclaration = new ArrayList<>();
+		c.cldec().forEach((declaration) -> {
+			allDeclaration.add((DecNode) visit(declaration));
+		});
+
+		//Read all declaration of variable and function
 		List<DecNode> declist = new ArrayList<>();
-		for (DecContext dec : c.dec()) declist.add((DecNode) visit(dec));
-		return new ProgLetInNode(declist, visit(c.exp()));
+		c.dec().forEach((declaration) -> {
+			declist.add((DecNode) visit(declaration));
+		});
+
+		//Add all declaration
+		allDeclaration.addAll(declist);
+
+		return new ProgLetInNode(allDeclaration, visit(c.exp()));
 	}
 
 	@Override
@@ -236,31 +253,137 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 
 	@Override
 	public Node visitCldec(CldecContext ctx) {
-		return null;
+		if(print) printVarAndProdName(ctx);
+		if(ctx.ID().isEmpty()) return null;
+
+		List<FieldNode> allFields = new ArrayList<>();
+		List<MethodNode> allMethods = new ArrayList<>();
+
+		//Visit all fields and store it in a temp list
+		/*
+		ctx.ID().forEach((field) -> {
+			int index = ctx.ID().indexOf(field);
+			//Add field in allFields list
+			FieldNode fieldNode = new FieldNode(field.getText(), (TypeNode) visit(ctx.type(index)));
+
+			//Update the number of the line in the filed
+			fieldNode.setLine(ctx.ID(index).getSymbol().getLine());
+
+			allFields.add(fieldNode);
+		});
+		*/
+		for(int i = 1; i < ctx.ID().size(); i++){
+			//Add field in allFields list
+			FieldNode fieldNode = new FieldNode(ctx.ID(i).getText(), (TypeNode) visit(ctx.type(i - 1)));
+			//Update the number of the line in the filed
+			fieldNode.setLine(ctx.ID(i).getSymbol().getLine());
+			allFields.add(fieldNode);
+		}
+
+		//Visit all methods and store it in a temp list
+		ctx.methdec().forEach((method) -> {
+			allMethods.add((MethodNode) visit(method));
+		});
+
+		//Create the class node
+		//Take the class id
+		String classId = ctx.ID(GLOBAL_SCOPE).getText();
+		ClassNode classNode = new ClassNode(classId, allFields, allMethods);
+		classNode.setLine(ctx.ID(GLOBAL_SCOPE).getSymbol().getLine());
+		return classNode;
 	}
 
 	@Override
 	public Node visitMethdec(MethdecContext ctx) {
-		return null;
+		if(print) printVarAndProdName(ctx);
+		if(ctx.ID().isEmpty()) return null;
+
+		List<ParNode> allParameters = new ArrayList<>();
+		List<DecNode> allDeclarations = new ArrayList<>();
+
+		//Visit all parameters and store it in a temp list
+		/*
+		ctx.ID().forEach((parameter) -> {
+			int index = ctx.ID().indexOf(parameter);
+			ParNode parNode = new ParNode(parameter.getText(),(TypeNode) visit(ctx.type(index)));
+			parNode.setLine(ctx.ID(index).getSymbol().getLine());
+			allParameters.add(parNode);
+		});
+		*/
+
+		for(int i = 1; i < ctx.ID().size(); i++){
+			//Add field in allFields list
+			ParNode fieldNode = new ParNode(ctx.ID(i).getText(), (TypeNode) visit(ctx.type(i)));
+			//Update the number of the line in the filed
+			fieldNode.setLine(ctx.ID(i).getSymbol().getLine());
+			allParameters.add(fieldNode);
+		}
+
+
+		//Visit all declarations and store it in a temp list
+		ctx.dec().forEach((declaration) -> {
+			allDeclarations.add((DecNode) visit(declaration));
+		});
+
+		//Create the MethodNode
+
+		//Get the id
+		String methodId = ctx.ID(GLOBAL_SCOPE).getText();
+		//Get the type
+		TypeNode typeNode = (TypeNode) visit(ctx.type(0));
+
+		MethodNode methodNode = new MethodNode(methodId, allParameters, allDeclarations, typeNode, visit(ctx.exp()));
+		methodNode.setLine(ctx.ID(GLOBAL_SCOPE).getSymbol().getLine());
+		return methodNode;
 	}
 
 	@Override
 	public Node visitNew(NewContext ctx) {
-		return null;
+		if(print) printVarAndProdName(ctx);
+		if(ctx.ID() == null) return null;
+		List<Node> allArguments = new ArrayList<>();
+
+		//Visit all arguments
+		ctx.exp().forEach((arg) -> {
+			allArguments.add(visit(arg));
+		});
+
+		//Create the NewNode
+		final NewNode newNode = new NewNode(ctx.ID().getText(), allArguments);
+		newNode.setLine(ctx.ID().getSymbol().getLine());
+		return newNode;
 	}
 
 	@Override
 	public Node visitNull(NullContext ctx) {
-		return null;
+		if(print) printVarAndProdName(ctx);
+		return new EmptyNode();
 	}
 
 	@Override
 	public Node visitDotCall(DotCallContext ctx) {
-		return null;
+		if(print) printVarAndProdName(ctx);
+		if(ctx.ID().size() != 2) return null;
+
+		List<Node> allArguments = new ArrayList<>();
+
+		//Visit all arguments
+		ctx.exp().forEach((arg) -> {
+			allArguments.add(visit(arg));
+		});
+
+		ClassCallNode classCallNode = new ClassCallNode(ctx.ID(0).getText(), ctx.ID(1).getText(), allArguments);
+		classCallNode.setLine(ctx.ID(0).getSymbol().getLine());
+		return classCallNode;
 	}
 
 	@Override
 	public Node visitIdType(IdTypeContext ctx) {
-		return null;
+		if(print) printVarAndProdName(ctx);
+
+		//Get the ref of the id
+		RefTypeNode refTypeNode = new RefTypeNode(ctx.ID().getText());
+		refTypeNode.setLine(ctx.ID().getSymbol().getLine());
+		return refTypeNode;
 	}
 }

@@ -239,7 +239,7 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 
 	@Override
 	public Void visitNode(NewNode n) throws VoidException {
-		printNode(n);
+		printNode(n, n.id + " at nesting level: " + n.nestingLevel);
 		visit(n.entry);
 		n.arg.forEach(this::visit);
 		return null;

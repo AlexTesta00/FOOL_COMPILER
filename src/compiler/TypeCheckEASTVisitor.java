@@ -345,12 +345,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 
 		//Check if the number of parameters is correct in class constructor
 		if (classTypeNode.allFields.size() == n.arg.size())
-			throw new TypeException("Wrong number of parameters in the invocation of a class constructor" + n.id,n.getLine());
+			throw new TypeException("Wrong number of parameters in the invocation of a class constructor " + n.id,n.getLine());
 
 		//Check if the type of parameters is correct in class constructor
 		for (int i = 0; i < n.arg.size(); i++)
 			if ( !(isSubtype(visit(n.arg.get(i)), classTypeNode.allFields.get(i))) )
-				throw new TypeException("Wrong type for " + ( i + 1) + "-th parameter in the invocation of constructor" + n.id,n.getLine());
+				throw new TypeException("Wrong type for " + ( i + 1) + "-th parameter in the invocation of constructor " + n.id,n.getLine());
 		return new RefTypeNode(n.id);
 	}
 

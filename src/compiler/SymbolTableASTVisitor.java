@@ -9,6 +9,7 @@ import compiler.lib.*;
 
 public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
+	private final int GLOBAL_SCOPE = 0;
 	private final Map<String, Map<String, STentry>> classTable = new HashMap<>(); //Map<String, STentry> is the virtual table
 	private final List<Map<String, STentry>> symTable = new ArrayList<>();
 	private int nestingLevel = 0; // current nesting level
@@ -252,6 +253,14 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		//Create the entry for the class
 		STentry sTentry = new STentry(0, classTypeNode, decOffset--);
 
+		//Put the entry in the global scope
+		Map<String, STentry> symbolTable = symTable.get(0);
+		if(symbolTable.put(n.id, sTentry) != null){
+			ErrorManager.printError(ErrorManager.WARNING_CODE,
+					"Class: " + n.id + " at line: " + n.getLine() + " is already declared");
+			stErrors++;
+		}
+
 		//Offset for visit the fields in class
 		int classFieldsOffset = -1;
 
@@ -367,6 +376,8 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		//Adjoust the offset
 		int oldStep = decOffset;
 		decOffset = -2;
+
+		//TODO Change this
 		AtomicInteger parOffset = new AtomicInteger(1);
 
 		//For all parameters, create the STentry and add it to the symbol table.
@@ -437,7 +448,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		}
 
 		//If the class exist, set the entry
-		n.entry = symTable.get(nestingLevel).get(n.id);
+		n.entry = symTable.get(GLOBAL_SCOPE).get(n.id);
 		n.nestingLevel = nestingLevel;
 
 		//Visit all arguments

@@ -319,7 +319,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 			visit(method);
 
 			//Read label and Update Dispatch Tables
-			dispatchTable.set(method.offset, method.label);
+			dispatchTable.add(method.offset, method.label);
 		});
 
 		String dispatchCode = "";
