@@ -344,7 +344,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		}
 
 		//Check if the number of parameters is correct in class constructor
-		if (classTypeNode.allFields.size() == n.arg.size())
+		if (!(classTypeNode.allFields.size() == n.arg.size()))
 			throw new TypeException("Wrong number of parameters in the invocation of a class constructor " + n.id,n.getLine());
 
 		//Check if the type of parameters is correct in class constructor
