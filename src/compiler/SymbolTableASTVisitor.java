@@ -245,10 +245,32 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	public Void visitNode(ClassNode n) throws VoidException {
 		if (print) printNode(n, n.id);
 
-		//TODO: For ereditareties
-
 		//Create a classTypeNode variable, that's represent the type of the class
-		ClassTypeNode classTypeNode = new ClassTypeNode(new ArrayList<>(), new ArrayList<>());
+		ClassTypeNode classTypeNode = new ClassTypeNode();
+
+		//Temporary classTypeNode for the super class
+		ClassTypeNode temporaryClassTypeNode = new ClassTypeNode();
+
+		//Check if exist the super class
+		if(n.superId != null){
+			//Check if the super class is already declared
+			if(classTable.containsKey(n.superId)){
+				STentry superParentSTEntry = symTable.get(GLOBAL_SCOPE).get(n.superId);
+				ClassTypeNode superParentTypeNode = (ClassTypeNode) superParentSTEntry.type;
+				temporaryClassTypeNode = new ClassTypeNode(superParentTypeNode);
+				n.superSTentry = superParentSTEntry;
+			}else{
+				ErrorManager.printError(ErrorManager.WARNING_CODE,
+						"Class: " + n.superId + " at line: " + n.getLine() + " isn't declared");
+				stErrors++;
+			}
+		}
+
+		//Add the parent class in the current class
+		classTypeNode = temporaryClassTypeNode;
+
+		//This is for the checking of the class and subclass
+		n.setType(classTypeNode);
 
 		//Create the entry for the class
 		STentry sTentry = new STentry(GLOBAL_SCOPE, classTypeNode, decOffset--);
@@ -275,15 +297,25 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 		//Add the class to the class and symbol table
 		Map<String, STentry> virtualClassTable = new HashMap<>();
+		if(n.superId != null){
+			virtualClassTable.putAll(classTable.get(n.superId)); //Put all is in super class
+		}
+
 		this.classTable.put(n.id, virtualClassTable);
 		this.symTable.add(virtualClassTable);
 
 		//This is it because the fields and method for the scope in class is a nesting level one
 		nestingLevel++;
 
+		//Compute the field offset
+		if(n.superId != null){
+			ClassTypeNode superType = (ClassTypeNode) symTable.get(GLOBAL_SCOPE).get(n.superId).type;
+			classFieldsOffset = new AtomicInteger(-superType.allFields.size() - 1);
+		}
+
 		/* Fields in class */
 		//Add the fields in the fieldsContainer and visit all fields
-		n.fieldNodeList.forEach((field) ->{
+		for(FieldNode field: n.fieldNodeList){
 			String fieldId = field.id;
 			if (fieldsContainer.contains(fieldId)) {
 				ErrorManager.printError(ErrorManager.WARNING_CODE,
@@ -297,29 +329,55 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			visit(field);
 
 			STentry fieldEntry = new STentry(nestingLevel, field.getType(), classFieldsOffset.getAndDecrement());
-			classTypeNode.allFields.add(-fieldEntry.offset - 1, fieldEntry.type);
+			//Check the super class
+			if(n.superId != null && virtualClassTable.containsKey(fieldId)){
+				STentry ovverrideField = virtualClassTable.get(fieldId);
+				if(ovverrideField.type instanceof  MethodTypeNode){
+					ErrorManager.printError(ErrorManager.ERROR_CODE,
+							"Cannot override method: " + fieldId + " with a field: " + fieldId);
+					stErrors++;
+				}else{
+					fieldEntry = new STentry(nestingLevel, field.getType(), ovverrideField.offset);
+					classTypeNode.allFields.set(-fieldEntry.offset - 1, fieldEntry.type);
+				}
+			}else{
+				classTypeNode.allFields.add(-fieldEntry.offset - 1, fieldEntry.type);
+			}
+
+			//Add field to the virtual table
 			virtualClassTable.put(fieldId, fieldEntry);
-		});
+			field.offset = fieldEntry.offset;
+
+		}
+
 
 		/* Method in class */
 		oldStepDecOffset = decOffset;
 		decOffset = 0;
-		n.methodNodeList.forEach((method) -> {
+
+		//Check the super class
+		if(n.superId != null){
+			ClassTypeNode superClassType = (ClassTypeNode) symTable.get(GLOBAL_SCOPE).get(n.superId).type;
+			decOffset = superClassType.allMethods.size();
+		}
+
+		for(MethodNode method: n.methodNodeList) {
 			//Chek if the method is already declared
 			String methodId = method.id;
 			if (methodContainer.contains(methodId)) {
 				ErrorManager.printError(ErrorManager.WARNING_CODE,
 						"Method: " + methodId + " at line: " + n.getLine() + " is already declared");
 				stErrors++;
-			}else{
+			} else {
 				methodContainer.add(methodId);
 			}
 
 			//Visit the method and add in the virtual table
 			visit(method);
 			classTypeNode.allMethods.add(method.offset,
-										((MethodTypeNode) symTable.get(nestingLevel).get(methodId).type).fun);
-		});
+					((MethodTypeNode) symTable.get(nestingLevel).get(methodId).type).fun);
+		}
+
 		//Return to the old offset
 		decOffset = oldStepDecOffset;
 		symTable.remove(nestingLevel--);
@@ -352,7 +410,18 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		//Create the STentry to adding at the symbol table
 		STentry sTentry = new STentry(nestingLevel, methodTypeNode, decOffset++);
 
-		//TODO ereditarieties
+		//Check if is present a super class
+		if(localTable.containsKey(n.id)){
+			var ovverrideMethod = localTable.get(n.id);
+			if(ovverrideMethod != null && ovverrideMethod.type instanceof MethodTypeNode){
+				sTentry = new STentry(nestingLevel, methodTypeNode, ovverrideMethod.offset);
+				decOffset--;
+			}else{
+				ErrorManager.printError(ErrorManager.ERROR_CODE,
+						"Cannot override a class method: " + n.id);
+				stErrors++;
+			}
+		}
 
 		//Update offset and put the entry in local symbol table
 		n.offset = sTentry.offset;
@@ -371,7 +440,6 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		int oldStep = decOffset;
 		decOffset = -2;
 
-		//TODO Change this
 		AtomicInteger parOffset = new AtomicInteger(1);
 
 		//For all parameters, create the STentry and add it to the symbol table.

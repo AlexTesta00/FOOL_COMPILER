@@ -271,7 +271,11 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	@Override
 	public TypeNode visitNode(ClassNode n) throws TypeException {
 		if(print) printNode(n, n.id);
-		//TODO Ereditarietis
+
+		//If a class have a super class, change it type in type map
+		if(n.superId != null){
+			superType.put(n.id, n.superId);
+		}
 
 		//Check if the methods in class have a correct type
 		//Visit all method of the class
@@ -283,6 +287,32 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 						"Class declaration error (type checking): " + e.text);
 			}
 		});
+
+		if(n.superId == null || n.superSTentry == null){
+			return null;
+		}
+
+		ClassTypeNode classTypeNode = (ClassTypeNode) n.getType();
+		ClassTypeNode superTypeNode = (ClassTypeNode) n.superSTentry.type;
+
+		//Check fields and methods are in correct position and have a correct subtypes
+		for(FieldNode field: n.fieldNodeList){
+			if ((-field.offset - 1) < superTypeNode.allFields.size() &&
+					!isSubtype(classTypeNode.allFields.get(-field.offset - 1),
+					superTypeNode.allFields.get(-field.offset - 1))) {
+				throw new TypeException("Wrong type for field " + field.id, field.getLine());
+			}
+		}
+
+		for(MethodNode method: n.methodNodeList){
+			if (method.offset < superTypeNode.allFields.size() &&
+					!isSubtype(classTypeNode.allMethods.get(method.offset),
+							superTypeNode.allMethods.get(method.offset))) {
+				throw new TypeException("Wrong type for method " + method.id, method.getLine());
+			}
+		}
+
+
 		return null;
 	}
 
@@ -298,7 +328,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		for (Node dec : n.decList)
 			try {
 				visit(dec);
-			} catch (IncomplException e) {
+			} catch (IncomplException ignored) {
 			} catch (TypeException e) {
 				ErrorManager.printError(ErrorManager.WARNING_CODE,
 						"Type checking error in a declaration: " + e.text);

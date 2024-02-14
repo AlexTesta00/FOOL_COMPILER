@@ -446,6 +446,7 @@ public class AST {
 	 * */
 	public static class FieldNode extends DecNode{
 		final String id;
+		int offset;
 		public FieldNode(String id, TypeNode typeNode){
 			this.id = id;
 			this.type = typeNode;
@@ -501,12 +502,18 @@ public class AST {
 		final String id;
 		final List<FieldNode> fieldNodeList;
 		final List<MethodNode> methodNodeList;
-		//TODO
+		final String superId; //Used for the super class, can be null
+		STentry superSTentry;
 
-		public ClassNode(String id, List<FieldNode> field, List<MethodNode> methodList){
+		public ClassNode(String id, List<FieldNode> field, List<MethodNode> methodList, String superId){
 			this.id = id;
 			this.fieldNodeList = Collections.unmodifiableList(field); //fieldNodeList is immutable
 			this.methodNodeList = Collections.unmodifiableList(methodList); //methodList is immutable
+			this.superId = superId;
+		}
+
+		void setType(TypeNode type){
+			this.type = type;
 		}
 
 		@Override
@@ -596,8 +603,14 @@ public class AST {
 			this.allMethods = new ArrayList<>(Collections.unmodifiableList(allMethods)); //allMethods is immutable
 		}
 
-		//TODO
+		public ClassTypeNode(){
+			this(new ArrayList<>(), new ArrayList<>());
+		}
 
+		//Create a constructor to inherit from the parent class fields and methods
+		public ClassTypeNode(final ClassTypeNode superClass){
+			this(superClass.allFields, superClass.allMethods);
+		}
 		@Override
 		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
 			return visitor.visitNode(this);

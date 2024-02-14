@@ -259,22 +259,16 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		List<FieldNode> allFields = new ArrayList<>();
 		List<MethodNode> allMethods = new ArrayList<>();
 
+		//Check if exist the super class, if the class exist get the name
+		String superClass = (ctx.EXTENDS() != null) ? ctx.ID(1).getText() : null;
+
+		//Compute the padding
+		int computedPadding = (superClass != null) ? 2 : 1;
+
 		//Visit all fields and store it in a temp list
-		/*
-		ctx.ID().forEach((field) -> {
-			int index = ctx.ID().indexOf(field);
+		for(int i = computedPadding; i < ctx.ID().size(); i++){
 			//Add field in allFields list
-			FieldNode fieldNode = new FieldNode(field.getText(), (TypeNode) visit(ctx.type(index)));
-
-			//Update the number of the line in the filed
-			fieldNode.setLine(ctx.ID(index).getSymbol().getLine());
-
-			allFields.add(fieldNode);
-		});
-		*/
-		for(int i = 1; i < ctx.ID().size(); i++){
-			//Add field in allFields list
-			FieldNode fieldNode = new FieldNode(ctx.ID(i).getText(), (TypeNode) visit(ctx.type(i - 1)));
+			FieldNode fieldNode = new FieldNode(ctx.ID(i).getText(), (TypeNode) visit(ctx.type(i - computedPadding)));
 			//Update the number of the line in the filed
 			fieldNode.setLine(ctx.ID(i).getSymbol().getLine());
 			allFields.add(fieldNode);
@@ -288,7 +282,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		//Create the class node
 		//Take the class id
 		String classId = ctx.ID(GLOBAL_SCOPE).getText();
-		ClassNode classNode = new ClassNode(classId, allFields, allMethods);
+		ClassNode classNode = new ClassNode(classId, allFields, allMethods, superClass);
 		classNode.setLine(ctx.ID(GLOBAL_SCOPE).getSymbol().getLine());
 		return classNode;
 	}

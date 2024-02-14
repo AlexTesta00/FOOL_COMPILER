@@ -15,6 +15,9 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
   CodeGenerationASTVisitor() {}
   CodeGenerationASTVisitor(boolean debug) {super(false,debug);} //enables print for debugging
 
+	//This represents the list of lables for each method of the class
+	private final List<List<String>> dispatchClassesTables = new ArrayList<>();
+
 	@Override
 	public String visitNode(ProgLetInNode n) {
 		if (print) printNode(n);
@@ -311,15 +314,27 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 
 		//Create dispatch tables
 		List<String> dispatchTable = new ArrayList<>();
-		//TODO ereditarietes
+		this.dispatchClassesTables.add(dispatchTable);
+
+		//Check the parent class
+		if(n.superSTentry != null){
+			List<String> superClassDispatchTable = dispatchClassesTables.get(-n.superSTentry.offset - 2);
+			dispatchTable.addAll(superClassDispatchTable);
+		}
 
 		//Check the method in order
 		n.methodNodeList.forEach((method) ->{
 			//Visit the element
 			visit(method);
 
-			//Read label and Update Dispatch Tables
-			dispatchTable.add(method.offset, method.label);
+			//Check if the method is of the super class
+			if(method.offset < dispatchTable.size()){
+				//Read label and Update Dispatch Tables
+				dispatchTable.add(method.offset, method.label);
+			}else{
+				//Read label and Update Dispatch Tables
+				dispatchTable.add(method.label);
+			}
 		});
 
 		String dispatchCode = "";
