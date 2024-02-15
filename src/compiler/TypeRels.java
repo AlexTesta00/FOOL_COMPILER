@@ -11,7 +11,6 @@ public class TypeRels {
 	//Map of the super type
 	public static Map<String, String> superType = new HashMap<>();
 
-
 	public static boolean isSubtype(TypeNode a, TypeNode b) {
 		return isIntAndBoolType(a, b) ||
 				checkSuperTypeHierarchy(a, b) ||
@@ -54,13 +53,15 @@ public class TypeRels {
 
 		if(checkTypeA.equals(checkTypeB)) return true;
 
-		var superClass = superType.get(checkTypeA);
-		while (superClass != null){
+		//var superClass = superType.get(checkTypeA);
+
+        return superType.get(checkTypeA).equals(checkTypeB);
+
+		/*while (superClass != null){
 			if(superClass.equals(checkTypeB)) return true;
 			superClass = superType.get(superClass);
-		}
-		return false;
-	}
+		}*/
+    }
 
 	private static boolean checkMethodOverride(TypeNode a, TypeNode b){
 		if(!(a instanceof ArrowTypeNode checkTypeA) || !(b instanceof ArrowTypeNode checkTypeB)) return false;
