@@ -1,8 +1,6 @@
 package compiler;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -51,15 +49,11 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 
 		//Read all class declaration
 		List<DecNode> allDeclaration = new ArrayList<>();
-		c.cldec().forEach((declaration) -> {
-			allDeclaration.add((DecNode) visit(declaration));
-		});
+		c.cldec().forEach(declaration -> allDeclaration.add((DecNode) visit(declaration)));
 
 		//Read all declaration of variable and function
 		List<DecNode> declist = new ArrayList<>();
-		c.dec().forEach((declaration) -> {
-			declist.add((DecNode) visit(declaration));
-		});
+		c.dec().forEach((declaration) -> declist.add((DecNode) visit(declaration)));
 
 		//Add all declaration
 		allDeclaration.addAll(declist);
@@ -88,7 +82,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 	public Node visitFundec(FundecContext c) {
 		if (print) printVarAndProdName(c);
 		List<ParNode> parList = new ArrayList<>();
-		for (int i = 1; i < c.ID().size(); i++) { 
+		for (int i = 1; i < c.ID().size(); i++) {
 			ParNode p = new ParNode(c.ID(i).getText(),(TypeNode) visit(c.type(i)));
 			p.setLine(c.ID(i).getSymbol().getLine());
 			parList.add(p);
@@ -96,7 +90,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		List<DecNode> decList = new ArrayList<>();
 		for (DecContext dec : c.dec()) decList.add((DecNode) visit(dec));
 		Node n = null;
-		if (c.ID().size()>0) { //non-incomplete ST
+		if (!c.ID().isEmpty()) { //non-incomplete ST
 			n = new FunNode(c.ID(0).getText(),(TypeNode)visit(c.type(0)),parList,decList,visit(c.exp()));
 			n.setLine(c.FUN().getSymbol().getLine());
 		}
@@ -275,9 +269,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		}
 
 		//Visit all methods and store it in a temp list
-		ctx.methdec().forEach((method) -> {
-			allMethods.add((MethodNode) visit(method));
-		});
+		ctx.methdec().forEach((method) -> allMethods.add((MethodNode) visit(method)));
 
 		//Create the class node
 		//Take the class id
@@ -315,9 +307,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 
 
 		//Visit all declarations and store it in a temp list
-		ctx.dec().forEach((declaration) -> {
-			allDeclarations.add((DecNode) visit(declaration));
-		});
+		ctx.dec().forEach((declaration) -> allDeclarations.add((DecNode) visit(declaration)));
 
 		//Create the MethodNode
 
@@ -338,9 +328,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		List<Node> allArguments = new ArrayList<>();
 
 		//Visit all arguments
-		ctx.exp().forEach((arg) -> {
-			allArguments.add(visit(arg));
-		});
+		ctx.exp().forEach((arg) -> allArguments.add(visit(arg)));
 
 		//Create the NewNode
 		final NewNode newNode = new NewNode(ctx.ID().getText(), allArguments);
@@ -362,9 +350,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		List<Node> allArguments = new ArrayList<>();
 
 		//Visit all arguments
-		ctx.exp().forEach((arg) -> {
-			allArguments.add(visit(arg));
-		});
+		ctx.exp().forEach((arg) -> allArguments.add(visit(arg)));
 
 		ClassCallNode classCallNode = new ClassCallNode(ctx.ID(0).getText(), ctx.ID(1).getText(), allArguments);
 		classCallNode.setLine(ctx.ID(0).getSymbol().getLine());
