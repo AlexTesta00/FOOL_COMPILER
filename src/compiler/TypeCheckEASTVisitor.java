@@ -75,11 +75,16 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		if (print) printNode(n);
 		if ( !(isSubtype(visit(n.cond), new BoolTypeNode())) )
 			throw new TypeException("Non boolean condition in if",n.getLine());
+
 		TypeNode t = visit(n.th);
 		TypeNode e = visit(n.el);
-		if (isSubtype(t, e)) return e;
-		if (isSubtype(e, t)) return t;
-		throw new TypeException("Incompatible types in then-else branches",n.getLine());
+
+		TypeNode type = lowestCommonAncestor(t, e);
+		if(type == null){
+			throw new TypeException("Incompatible types in then-else branches",n.getLine());
+		}
+
+		return type;
 	}
 
 	@Override

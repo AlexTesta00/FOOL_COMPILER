@@ -12,7 +12,6 @@ public class TypeRels {
 	public static Map<String, String> superType = new HashMap<>();
 
 
-	// valuta se il tipo "a" e' <= al tipo "b", dove "a" e "b" sono tipi di base: IntTypeNode o BoolTypeNode
 	public static boolean isSubtype(TypeNode a, TypeNode b) {
 		return isIntAndBoolType(a, b) ||
 				checkSuperTypeHierarchy(a, b) ||
@@ -20,7 +19,7 @@ public class TypeRels {
 				checkMethodOverride(a, b);
 	}
 
-	private static TypeNode lowestCommonAncestor(TypeNode a, TypeNode b){
+	public static TypeNode lowestCommonAncestor(TypeNode a, TypeNode b){
 		if(isSubtype(a, b)) return b;
 		if(isSubtype(b, a)) return a;
 

@@ -290,7 +290,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		Set<String> fieldsContainer = new HashSet<>();
 
 		//Container of method for the class
-		List<String> methodContainer = new ArrayList<>();
+		Set<String> methodContainer = new HashSet<>();
 
 		//Utils for store old decOffset
 		int oldStepDecOffset = 0;
