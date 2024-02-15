@@ -53,14 +53,7 @@ public class TypeRels {
 
 		if(checkTypeA.equals(checkTypeB)) return true;
 
-		//var superClass = superType.get(checkTypeA);
-
         return superType.get(checkTypeA).equals(checkTypeB);
-
-		/*while (superClass != null){
-			if(superClass.equals(checkTypeB)) return true;
-			superClass = superType.get(superClass);
-		}*/
     }
 
 	private static boolean checkMethodOverride(TypeNode a, TypeNode b){
@@ -70,7 +63,7 @@ public class TypeRels {
 		if(!isSubtype(checkTypeA.ret, checkTypeB.ret)) return false;
 
 		/* Counter-variance of the parameters type*/
-		for(int i = 0; i < checkTypeA.parlist.size(); i++){
+		for(int i = 0; i < checkTypeA.parlist.size(); i++){ // TODO: index i is useless in this case and can be optimized
 			if(!isSubtype(checkTypeB.parlist.get(i), checkTypeA.parlist.get(i))){
 				return false;
 			}
