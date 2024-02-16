@@ -15,13 +15,9 @@ public class TypeRels {
 	//Map of the super type for each type
 	public static Map<String, String> superType = new HashMap<>();
 
-<<<<<<< HEAD
-
 	/*
 	* Check if the first type is a subtype of the second type
 	* */
-=======
->>>>>>> 4c65694ac753335811a69f03293c161fe4366047
 	public static boolean isSubtype(TypeNode a, TypeNode b) {
 		return isIntAndBoolType(a, b) ||
 				checkSuperTypeHierarchy(a, b) ||
@@ -104,8 +100,11 @@ public class TypeRels {
 		if(!isSubtype(checkTypeA.ret, checkTypeB.ret)) return false;
 
 		/* Counter-variance of the parameters type*/
-		for(int i = 0; i < checkTypeA.parlist.size(); i++){ // TODO: index i is useless in this case and can be optimized
-			if(!isSubtype(checkTypeB.parlist.get(i), checkTypeA.parlist.get(i))){
+		for(TypeNode aNode : checkTypeA.parlist){
+			int index = checkTypeA.parlist.indexOf(aNode);
+			TypeNode bNode = checkTypeB.parlist.get(index);
+
+			if(!isSubtype(bNode, aNode)){
 				return false;
 			}
 		}
