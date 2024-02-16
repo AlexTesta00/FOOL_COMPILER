@@ -66,7 +66,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 				"sfp", // set $fp to popped value (Control Link)
 				"ltm", // load $tm value (function result)
 				"lra", // load $ra value
-				"js"  // jump to to popped address
+				"js"  // jump to popped address
 			)
 		);
 		return "push "+funl;		

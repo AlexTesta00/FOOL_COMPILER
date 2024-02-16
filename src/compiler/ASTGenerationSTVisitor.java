@@ -296,15 +296,6 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		List<DecNode> allDeclarations = new ArrayList<>();
 
 		//Visit all parameters and store it in a temp list
-		/*
-		ctx.ID().forEach((parameter) -> {
-			int index = ctx.ID().indexOf(parameter);
-			ParNode parNode = new ParNode(parameter.getText(),(TypeNode) visit(ctx.type(index)));
-			parNode.setLine(ctx.ID(index).getSymbol().getLine());
-			allParameters.add(parNode);
-		});
-		*/
-
 		for(int i = 1; i < ctx.ID().size(); i++){
 			//Add field in allFields list
 			ParNode fieldNode = new ParNode(ctx.ID(i).getText(), (TypeNode) visit(ctx.type(i)));

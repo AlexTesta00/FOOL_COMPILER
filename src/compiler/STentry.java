@@ -2,6 +2,14 @@ package compiler;
 
 import compiler.lib.*;
 
+/*
+* Class STentry
+* Is an abstraction of entry
+* It's contains:
+* The nesting level
+* The type
+* The offset
+* */
 public class STentry implements Visitable {
 	final int nl;
 	final TypeNode type;

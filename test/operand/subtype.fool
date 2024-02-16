@@ -1,0 +1,4 @@
+let
+    var x:bool = 5;
+in
+    print( if (x == 0) then {x} else{x});
