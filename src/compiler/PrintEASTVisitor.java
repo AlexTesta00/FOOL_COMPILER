@@ -4,6 +4,11 @@ import compiler.AST.*;
 import compiler.lib.*;
 import compiler.exc.*;
 
+/*
+ * PrintEASTVisitor Class
+ * It implements a visitor for printing the EAST
+ * It is used for debugging purposes
+ * */
 public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 
 	PrintEASTVisitor() { super(false,true); }
@@ -90,7 +95,7 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 
 	@Override
 	public Void visitNode(CallNode n) {
-		printNode(n,n.id+" at nestinglevel "+n.nl); 
+		printNode(n,n.id + " at nestinglevel " + n.nl);
 		visit(n.entry);
 		for (Node arg : n.arglist) visit(arg);
 		return null;
@@ -98,7 +103,7 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 
 	@Override
 	public Void visitNode(IdNode n) {
-		printNode(n,n.id+" at nestinglevel "+n.nestingLevel);
+		printNode(n,n.id + " at nestinglevel " + n.nestingLevel);
 		visit(n.entry);
 		return null;
 	}
@@ -118,8 +123,8 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 	@Override
 	public Void visitNode(ArrowTypeNode n) {
 		printNode(n);
-		for (Node par: n.parlist) visit(par);
-		visit(n.ret,"->"); //marks return type
+		for (Node par : n.parlist) visit(par);
+		visit(n.ret,"->");
 		return null;
 	}
 
@@ -137,10 +142,10 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 	
 	@Override
 	public Void visitSTentry(STentry entry) {
-		printSTentry("nestlev "+entry.nl);
+		printSTentry("nestingLevel " + entry.nl);
 		printSTentry("type");
 		visit(entry.type);
-		printSTentry("offset "+entry.offset);
+		printSTentry("offset " + entry.offset);
 		return null;
 	}
 
@@ -220,7 +225,7 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 
 	@Override
 	public Void visitNode(MethodNode n) throws VoidException {
-		printNode(n, n.id);
+		printNode(n,n.id);
 		visit(n.retType);
 		n.parList.forEach(this::visit);
 		n.decList.forEach(this::visit);
@@ -239,7 +244,7 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 
 	@Override
 	public Void visitNode(NewNode n) throws VoidException {
-		printNode(n, n.id + " at nesting level: " + n.nestingLevel);
+		printNode(n,n.id + " at nesting level: " + n.nestingLevel);
 		visit(n.entry);
 		n.arg.forEach(this::visit);
 		return null;

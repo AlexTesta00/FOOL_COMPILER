@@ -8,6 +8,7 @@ import compiler.exc.*;
 import svm.*;
 
 public class Test {
+	public static int EXIT_WHIT_ERRORS = 1;
     public static void main(String[] args) throws Exception {
    			
     	String fileName = "test/class/bankloan.fool";
@@ -52,7 +53,7 @@ public class Test {
     	int frontEndErrors = lexer.lexicalErrors+parser.getNumberOfSyntaxErrors()+symtableVisitor.stErrors+FOOLlib.typeErrors;
 		System.out.println("You had a total of "+frontEndErrors+" front-end errors.\n");
 		
-		if ( frontEndErrors > 0) System.exit(1);   
+		if ( frontEndErrors > 0) System.exit(EXIT_WHIT_ERRORS);
 
     	System.out.println("Generating code.");
     	String code = new CodeGenerationASTVisitor().visit(ast);        
@@ -71,7 +72,7 @@ public class Test {
 
     	// needed only for debug
     	System.out.println("You had: "+lexerASM.lexicalErrors+" lexical errors and "+parserASM.getNumberOfSyntaxErrors()+" syntax errors.\n");
-    	if (lexerASM.lexicalErrors+parserASM.getNumberOfSyntaxErrors()>0) System.exit(1);
+    	if (lexerASM.lexicalErrors+parserASM.getNumberOfSyntaxErrors()>0) System.exit(EXIT_WHIT_ERRORS);
 
     	System.out.println("Running generated code via Stack Virtual Machine.");
     	ExecuteVM vm = new ExecuteVM(parserASM.code);
